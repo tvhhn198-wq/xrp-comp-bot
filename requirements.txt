@@ -1,4 +1,5 @@
-txtpython-telegram-bot==20.8
+txt
+python-telegram-bot==20.8
 xrpl-py==2.6.1
 httpx==0.24.1
 websockets==11.0.3
