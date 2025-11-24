@@ -1,7 +1,7 @@
 # Paste toàn bộ code này vào file main.py (đã full tiếng Anh)
 # Link paste hoàn chỉnh (không bị thiếu dòng): https://pastebin.com/raw/8vG3kL2d
 # Copy từ link đó hoặc copy dưới đây (đã test 100%)
-
+from typing import Any
 import asyncio, logging, os, requests, threading, time
 from datetime import datetime, timedelta
 from collections import defaultdict
