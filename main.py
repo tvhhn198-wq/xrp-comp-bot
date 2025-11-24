@@ -12,7 +12,6 @@ from dotenv import load_dotenv
 from xrpl.clients import JsonRpcClient
 from xrpl.wallet import Wallet
 from xrpl.models.transactions import Payment
-from xrpl.models.amounts import IssuedCurrencyAmount
 from xrpl.utils import xrp_to_drops
 from xrpl.transaction import autofill_and_sign, submit_and_wait
 
@@ -23,7 +22,7 @@ logger = logging.getLogger(__name__)
 # ================== CONFIG ==================
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_ID = int(os.getenv("ADMIN_ID"))
-FEE_WALLET_ADDRESS = os.getenv("FEE_WALLET_ADDRESS")  # Chỉ cần address, không cần secret!
+FEE_WALLET_ADDRESS = os.getenv("FEE_WALLET_ADDRESS")  # Chỉ cần address, bot gửi phí từ prize wallet
 
 # 20 ví prize (mỗi ví ~3 XRP gas)
 PRIZE_WALLETS = []
@@ -51,7 +50,7 @@ def get_free_wallet():
             return w
     return None
 
-async def send_xrp(wallet: Wallet, to_address: str, amount_xrp: float, memo: str = ""):
+def send_xrp(wallet: Wallet, to_address: str, amount_xrp: float, memo: str = ""):
     tx = Payment(
         account=wallet.classic_address,
         destination=to_address,
@@ -62,6 +61,7 @@ async def send_xrp(wallet: Wallet, to_address: str, amount_xrp: float, memo: str
     
     signed = autofill_and_sign(tx, wallet, CLIENT)
     response = submit_and_wait(signed, CLIENT)
+    logger.info(f"Sent {amount_xrp} XRP to {to_address}: {response.get('result', {}).get('hash')}")
     return response.result
 
 # ================== COMMANDS ==================
@@ -148,15 +148,15 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         threading.Thread(target=monitor_payment, args=(comp_id,), daemon=True).start()
 
-# ================== MAIN ==================
 def monitor_payment(comp_id: str):
-    # Simple monitoring (sẽ nâng cấp sau)
-    time.sleep(300)  # tạm 5 phút test
+    # Simple monitoring (poll API thực tế sau)
+    time.sleep(10)  # Giả lập nhận tiền nhanh cho test
     if competitions[comp_id]["status"] == "waiting_payment":
-        # giả lập nhận 200 XRP
-        competitions[comp_id]["pool"] = 200.0
+        competitions[comp_id]["pool"] = 200.0  # Giả lập 200 XRP
         competitions[comp_id]["status"] = "ready"
+        # Gửi nút START qua DM (thêm callback sau)
 
+# ================== MAIN ==================
 app = Application.builder().token(BOT_TOKEN).concurrent_updates(True).build()
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("comp", comp))
